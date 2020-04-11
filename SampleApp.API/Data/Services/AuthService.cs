@@ -40,6 +40,10 @@ namespace SampleApp.API.Data.Services
                         return false;
                     }
                 }
+                // if(computedHash != passwordHash)
+                // {
+                //     return false;
+                // }
                 return true;
             }
         }
