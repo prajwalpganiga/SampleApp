@@ -23,6 +23,7 @@ namespace SampleApp.API.Controllerss
         }
         // GET api/values
         [HttpGet]
+        [AllowAnonymous]
         //[Route("GetValues")]
         public async Task<IActionResult> GetValues()
         {
