@@ -1,0 +1,29 @@
+1. Add Git Source:
+git remote add origin https://github.com/prajwalpganiga/SampleApp.git
+
+2. Pull
+git pull https://github.com/prajwalpganiga/SampleApp.git
+
+3. Commit
+git commit -m "first commit"
+
+4. Angular Build
+ng build
+
+5. Angular Run
+ng serve
+
+6. C# build
+dotnet build
+
+7. C# Run
+dotnet watch run
+
+8. Formating
+Alt + Shift + F
+
+8. NuGet Package Manager: Add Package
+Ctrl + Shift + P
+
+9. Recently Opened Files
+Ctrl + P
