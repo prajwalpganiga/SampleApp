@@ -27,3 +27,6 @@ Ctrl + Shift + P
 
 9. Recently Opened Files
 Ctrl + P
+
+10. Create Guard
+ng g guard auth --skipTests
