@@ -30,3 +30,9 @@ Ctrl + P
 
 10. Create Guard
 ng g guard auth --skipTests
+
+11. Create Migrations
+dotnet ef migrations add ExtendedUserClass
+
+12. Apply/Publish Migrations
+dotnet ef database update

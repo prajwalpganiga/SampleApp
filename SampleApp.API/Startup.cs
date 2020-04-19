@@ -18,6 +18,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SampleApp.API.Data;
+using SampleApp.API.Data.Interfaces;
 using SampleApp.API.Data.Services;
 using SampleApp.API.Helpers;
 
@@ -36,9 +37,10 @@ namespace SampleApp.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson();
             services.AddCors();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ISampleAppService, SampleAppService>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
