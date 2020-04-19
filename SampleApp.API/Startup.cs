@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -37,8 +38,12 @@ namespace SampleApp.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddControllers().AddNewtonsoftJson();
+            services.AddControllers().AddNewtonsoftJson(opt =>
+            {
+                opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
             services.AddCors();
+            services.AddAutoMapper(typeof(SampleAppService).Assembly);
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ISampleAppService, SampleAppService>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -48,7 +53,7 @@ namespace SampleApp.API
                     {
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
-                        ValidateAudience=false,
+                        ValidateAudience = false,
                         ValidateIssuer = false
                         // ValidIssuer = "http://localhost:61768/"
                     };
