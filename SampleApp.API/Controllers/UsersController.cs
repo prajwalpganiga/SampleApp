@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SampleApp.API.Data.Interfaces;
 using SampleApp.API.Dtos;
+using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SampleApp.API.Controllers
@@ -36,5 +38,23 @@ namespace SampleApp.API.Controllers
             var userToReturn = _mapper.Map<UserForDetailedDto>(user);
             return Ok(userToReturn);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, UserForUpdateDto userForUpdateDto)
+        {
+            if (id != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            {
+                return Unauthorized();
+            }
+            var userFromRepo = await _sampleAppService.GetUser(id);
+            _mapper.Map(userForUpdateDto, userFromRepo);
+            if(await _sampleAppService.SaveAll())
+            {
+                return NoContent();
+            }
+            throw new Exception($"Updating user {id} failed on save");
+               
+        }
+
     }
 }
