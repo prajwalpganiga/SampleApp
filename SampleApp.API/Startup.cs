@@ -43,6 +43,7 @@ namespace SampleApp.API
                 opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             });
             services.AddCors();
+            services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             services.AddAutoMapper(typeof(SampleAppService).Assembly);
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ISampleAppService, SampleAppService>();
