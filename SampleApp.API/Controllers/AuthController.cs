@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using SampleApp.API.Data;
@@ -20,10 +21,12 @@ namespace SampleApp.API.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IConfiguration _config;
-        public AuthController(IAuthService authService, IConfiguration config)
+        private readonly IMapper _mapper;
+        public AuthController(IAuthService authService, IConfiguration config, IMapper mapper)
         {
             _authService = authService;
             _config = config;
+            _mapper = mapper;
         }
 
         [HttpPost("register")]
@@ -65,9 +68,12 @@ namespace SampleApp.API.Controllers
             };
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            var user = _mapper.Map<UserForListDto>(userFromRepo);
             return Ok(new
             {
-                token = tokenHandler.WriteToken(token)
+                token = tokenHandler.WriteToken(token),
+                user
             });
         }
 
