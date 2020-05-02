@@ -47,5 +47,10 @@ namespace SampleApp.API.Data.Services
             var photo = await _context.Photos.FirstOrDefaultAsync(p => p.Id == id);
             return photo;
         }
+
+        public async Task<Photo> GetMainPhotoForUser(int userId)
+        {
+            return _context.Photos.Where(u => u.UserId == userId).FirstOrDefault(p => p.IsMain);
+        }
     }
 }

@@ -51,7 +51,7 @@ namespace SampleApp.API.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> AddPhotoForUser(int userId, PhotoForCreationDto photoForCreationDto)
+        public async Task<IActionResult> AddPhotoForUser(int userId,[FromForm] PhotoForCreationDto photoForCreationDto)
         {
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
             {
@@ -92,5 +92,34 @@ namespace SampleApp.API.Controllers
             }
             return BadRequest("Could not add the photo");
         }
+
+        [HttpPost("{id}/setMain")]
+        public async Task<IActionResult> SetMainPhoto(int userId, int id)
+        {
+            if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            {
+                return Unauthorized();
+            }
+            var user = await _sampleAppService.GetUser(userId);
+            if(!user.Photos.Any(p => p.Id == id))
+            {
+                return Unauthorized();
+            }
+            var photoFromRepo = await _sampleAppService.GetPhoto(id);
+            if(photoFromRepo.IsMain)
+            {
+                return BadRequest("This is already the main photo");
+            }
+            Photo currentMainPhoto = await _sampleAppService.GetMainPhotoForUser(userId);
+            currentMainPhoto.IsMain = false;
+
+            photoFromRepo.IsMain = true;
+            if(await _sampleAppService.SaveAll())
+            {
+                return NoContent();
+            }
+            return BadRequest("Could not set photo to main");
+        }
+
     }
 }
