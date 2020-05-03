@@ -121,5 +121,46 @@ namespace SampleApp.API.Controllers
             return BadRequest("Could not set photo to main");
         }
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePhoto(int userId, int id)
+        {
+            if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            {
+                return Unauthorized();
+            }
+            var user = await _sampleAppService.GetUser(userId);
+            if (!user.Photos.Any(p => p.Id == id))
+            {
+                return Unauthorized();
+            }
+            var photoFromRepo = await _sampleAppService.GetPhoto(id);
+            if (photoFromRepo.IsMain)
+            {
+                return BadRequest("Can't delete main photo!");
+            }
+            if(photoFromRepo.PublicId != null)
+            {
+                var deleteParams = new DeletionParams(photoFromRepo.PublicId);
+                var result = _cloudinary.Destroy(deleteParams);
+                if (result.Result == "ok")
+                {
+                    _sampleAppService.Delete(photoFromRepo);
+                }
+                else
+                {
+                    return BadRequest("Something went wrong!\nPlease try again later");
+                }
+            }
+            if(photoFromRepo.PublicId == null)
+            {
+                _sampleAppService.Delete(photoFromRepo);
+            }
+            if(await _sampleAppService.SaveAll())
+            {
+                return Ok();
+            }
+            return BadRequest("Failed to Delete");
+        }
+
     }
 }
