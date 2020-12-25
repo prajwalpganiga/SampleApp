@@ -39,8 +39,12 @@ namespace SampleApp.API.Controllers
                 return BadRequest("Username Already Exists");
 
             }
-            var userToCreate = new User { Username = userForRegisterDto.Username };
-            var createdUser = await _authService.Register(userToCreate, userForRegisterDto.Password);
+            var user = _mapper.Map<User>(userForRegisterDto);
+
+            user.Username = userForRegisterDto.Username.ToLower();
+
+            var createdUser = await _authService.Register(user, userForRegisterDto.Password);
+
             return StatusCode(201);
         }
 
