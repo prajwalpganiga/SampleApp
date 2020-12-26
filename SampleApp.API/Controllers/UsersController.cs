@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SampleApp.API.Data.Interfaces;
 using SampleApp.API.Dtos;
+using SampleApp.API.Extensions;
+using SampleApp.API.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -13,6 +15,7 @@ namespace SampleApp.API.Controllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
+    [ServiceFilter(typeof(LogUserActivity))]
     public class UsersController : ControllerBase
     {
         private readonly ISampleAppService _sampleAppService;
@@ -24,9 +27,16 @@ namespace SampleApp.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsers([FromQuery] UserParams userParams)
         {
-            var users = await _sampleAppService.GetUsers();
+            var user = await _sampleAppService.GetUserByUserName(User.Identity.Name);
+            userParams.CurrentUsername = user.Username;
+            if(string.IsNullOrEmpty(userParams.Gender))
+            {
+                userParams.Gender = user.Gender == "male" ? "female" : "male";
+            }
+            var users = await _sampleAppService.GetUsers(userParams);
+            Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
             var usersToReturn = _mapper.Map<IEnumerable<UserForListDto>>(users);
             return Ok(usersToReturn);
         }
@@ -48,12 +58,12 @@ namespace SampleApp.API.Controllers
             }
             var userFromRepo = await _sampleAppService.GetUser(id);
             _mapper.Map(userForUpdateDto, userFromRepo);
-            if(await _sampleAppService.SaveAll())
+            if (await _sampleAppService.SaveAll())
             {
                 return NoContent();
             }
             throw new Exception($"Updating user {id} failed on save");
-               
+
         }
 
     }

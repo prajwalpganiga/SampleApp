@@ -29,6 +29,10 @@ import { PreventUnsavedChanges } from './_guards/prevent-unsaved-changes.guard';
 import { AuthGuard } from './_guards/auth.guard';
 import { PhotoEditorComponent } from './members/photo-editor/photo-editor.component';
 import { TextInputComponent } from './_forms/text-input/text-input.component';
+import { PaginationModule } from 'ngx-bootstrap/pagination';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ButtonsModule } from 'ngx-bootstrap/buttons';
+import { TimeagoModule } from 'ngx-timeago';
 
 
 // export class CustomHammerConfig extends HammerGestureConfig{
@@ -65,14 +69,18 @@ export function tokenGetter(){
       RouterModule.forRoot(appRoutes),
       NgxGalleryModule,
       FileUploadModule,
+      PaginationModule.forRoot(),
       TabsModule.forRoot(),
+      ButtonsModule.forRoot(),
+      TimeagoModule.forRoot(),
       JwtModule.forRoot({
          config: {
             tokenGetter,
             whitelistedDomains: ['localhost:5000'],
             blacklistedRoutes: ['localhost:5000/api/auth']
          }
-      })
+      }),
+      BrowserAnimationsModule
    ],
    providers: [
       AuthService,
@@ -85,6 +93,11 @@ export function tokenGetter(){
    ],
    bootstrap: [
       AppComponent
+   ],
+   exports:[
+      PaginationModule,
+      ButtonsModule,
+      TimeagoModule
    ]
 })
 export class AppModule { }
