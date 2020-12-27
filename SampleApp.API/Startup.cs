@@ -47,6 +47,7 @@ namespace SampleApp.API
             services.AddAutoMapper(typeof(SampleAppService).Assembly);
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ISampleAppService, SampleAppService>();
+            services.AddScoped<ILikesService, LikesService>();
             services.AddScoped<LogUserActivity>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
