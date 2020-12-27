@@ -33,6 +33,7 @@ import { PaginationModule } from 'ngx-bootstrap/pagination';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonsModule } from 'ngx-bootstrap/buttons';
 import { TimeagoModule } from 'ngx-timeago';
+import { MemberMessagesComponent } from './members/member-messages/member-messages.component';
 
 
 // export class CustomHammerConfig extends HammerGestureConfig{
@@ -59,6 +60,7 @@ export function tokenGetter(){
       MemberEditComponent,
       PhotoEditorComponent,
       TextInputComponent,
+      MemberMessagesComponent,
    ],
    imports: [
       BrowserModule,

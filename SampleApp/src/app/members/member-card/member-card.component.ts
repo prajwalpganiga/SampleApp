@@ -10,6 +10,7 @@ import { UserService } from 'src/app/_services/user.service';
 })
 export class MemberCardComponent implements OnInit {
   @Input() user: User;
+  @Input() showLike: boolean = true;
 
   constructor(private UserService: UserService, private alertifyService: AlertifyService) { }
 

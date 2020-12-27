@@ -29,7 +29,7 @@ namespace SampleApp.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<MessageDto>> CreateMessage(CreateMessageDto createMessageDto)
+        public async Task<ActionResult<MessageDto>> CreateMessage([FromBody] CreateMessageDto createMessageDto)
         {
             var username = User.FindFirst(ClaimTypes.Name)?.Value;
             if (username == createMessageDto.RecipientUserName.ToLower())
@@ -73,7 +73,31 @@ namespace SampleApp.API.Controllers
         {
             var currentUsername = User.FindFirst(ClaimTypes.Name)?.Value;
 
-            return Ok(_messageService.GetMessageThread(currentUsername, username));
+            var messages = _messageService.GetMessageThread(currentUsername, username);
+
+            return Ok(messages);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteMessage(int id)
+        {
+            var username = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            var message = await _messageService.GetMessage(id);
+
+            if (message == null) return NotFound();
+
+            if (message.Sender.Username != username && message.Recipient.Username != username) return Unauthorized();
+
+            if (message.Sender.Username == username) message.SenderDeleted = true;
+
+            if (message.Recipient.Username == username) message.RecipientDeleted = true;
+
+            if (message.SenderDeleted && message.RecipientDeleted) _messageService.DeleteMessage(message);
+
+            if (await _messageService.SaveAllAsync()) return Ok();
+
+            return BadRequest("Problem deleting the message");
         }
     }
 }
