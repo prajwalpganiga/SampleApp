@@ -48,6 +48,7 @@ namespace SampleApp.API
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ISampleAppService, SampleAppService>();
             services.AddScoped<ILikesService, LikesService>();
+            services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<LogUserActivity>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
