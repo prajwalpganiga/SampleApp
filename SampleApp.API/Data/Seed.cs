@@ -1,38 +1,47 @@
+using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
 using SampleApp.API.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SampleApp.API.Data
 {
     public class Seed
     {
-        public static void SeedUsers(DataContext context)
+        public static async Task SeedUsers(UserManager<User> userManager, RoleManager<Role> roleManager)
         {
-            if(!context.Users.Any())
+            if (!userManager.Users.Any())
             {
                 var userData = System.IO.File.ReadAllText("Data/UserSeedData.json");
                 var users = JsonConvert.DeserializeObject<List<User>>(userData);
-                foreach(var user in users)
+
+                var roles = new List<Role>
                 {
-                    byte[] passwordHash, passwordSalt;
-                    CreatePasswordHash("password", out passwordHash, out passwordSalt);
-                    user.PasswordHash = passwordHash;
-                    user.PasswordSalt = passwordSalt;
-                    user.Username = user.Username.ToLower();
-                    context.Users.Add(user);
+                    new Role{ Name = "Member"},
+                    new Role{ Name = "Admin"},
+                    new Role{ Name = "Moderator" }
+                };
+
+                foreach(var role in roles)
+                {
+                    await roleManager.CreateAsync(role);
                 }
 
-                context.SaveChanges();
-            }
-        }
+                foreach (var user in users)
+                {
+                    user.UserName = user.UserName.ToLower();
+                    await userManager.CreateAsync(user, "Pass123!");
+                    await userManager.AddToRoleAsync(user, "Member");
+                }
 
-        private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new System.Security.Cryptography.HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                var admin = new User
+                {
+                    UserName = "admin"
+                };
+
+                await userManager.CreateAsync(admin, "Pass123!");
+                await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
             }
         }
     }

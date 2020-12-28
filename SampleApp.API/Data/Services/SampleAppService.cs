@@ -38,7 +38,7 @@ namespace SampleApp.API.Data.Services
         {
             var query = _context.Users.Include(p => p.Photos).AsNoTracking().AsQueryable();
 
-            query = query.Where(u => u.Username != userParams.CurrentUsername);
+            query = query.Where(u => u.UserName != userParams.CurrentUsername);
             query = query.Where(u => u.Gender == userParams.Gender);
 
             var minDob = DateTime.Today.AddYears(-userParams.MaxAge - 1);
@@ -63,7 +63,7 @@ namespace SampleApp.API.Data.Services
         public async Task<User> GetUserByUserName(string username)
         {
             return await _context.Users.Include(p => p.Photos)
-                .Where(x => x.Username == username)
+                .Where(x => x.UserName == username)
                 .SingleOrDefaultAsync();
         }
 

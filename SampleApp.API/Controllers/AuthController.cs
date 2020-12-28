@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -22,11 +23,13 @@ namespace SampleApp.API.Controllers
         private readonly IAuthService _authService;
         private readonly IConfiguration _config;
         private readonly IMapper _mapper;
-        public AuthController(IAuthService authService, IConfiguration config, IMapper mapper)
+        private readonly UserManager<User> _userManager;
+        public AuthController(IAuthService authService, IConfiguration config, IMapper mapper, UserManager<User> userManager)
         {
             _authService = authService;
             _config = config;
             _mapper = mapper;
+            _userManager = userManager;
         }
 
         [HttpPost("register")]
@@ -41,9 +44,13 @@ namespace SampleApp.API.Controllers
             }
             var user = _mapper.Map<User>(userForRegisterDto);
 
-            user.Username = userForRegisterDto.Username.ToLower();
+            user.UserName = userForRegisterDto.Username.ToLower();
 
-            var createdUser = await _authService.Register(user, userForRegisterDto.Password);
+            var roleResult = await _userManager.AddToRoleAsync(user, "Member");
+
+            if (!roleResult.Succeeded) return BadRequest(roleResult.Errors);
+
+            await _authService.Register(user, userForRegisterDto.Password);
 
             return StatusCode(201);
         }
@@ -56,11 +63,17 @@ namespace SampleApp.API.Controllers
             {
                 return Unauthorized();
             }
-            var claims = new[]
+
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier,userFromRepo.Id.ToString()),
-                new Claim(ClaimTypes.Name,userFromRepo.Username)
+                new Claim(ClaimTypes.Name,userFromRepo.UserName)
             };
+
+            var roles = await _userManager.GetRolesAsync(userFromRepo);
+
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetSection("AppSettings:Token").Value));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
