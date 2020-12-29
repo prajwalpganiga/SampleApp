@@ -2,10 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { User } from '../../_models/user';
 import { AlertifyService } from '../../_services/Alertify.service';
 import { UserService } from '../../_services/user.service';
-import { ActivatedRoute } from '@angular/router';
 import { Pagination } from 'src/app/_models/pagination';
 import { UserParams } from 'src/app/_models/userParams';
-import { AuthService } from 'src/app/_services/auth.service';
 
 @Component({
   selector: 'app-member-list',
@@ -19,8 +17,7 @@ export class MemberListComponent implements OnInit {
   user: User;
   genderList = [{value: 'male', display: 'Male'}, {value: 'female', display: 'Female'}]
 
-  constructor(private userService: UserService, private alertify: AlertifyService,
-              private route: ActivatedRoute) { 
+  constructor(private userService: UserService, private alertify: AlertifyService) { 
               }
 
   ngOnInit() {
