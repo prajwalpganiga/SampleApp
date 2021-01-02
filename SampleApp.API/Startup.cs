@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -17,6 +18,7 @@ using SampleApp.API.Data.Interfaces;
 using SampleApp.API.Data.Services;
 using SampleApp.API.Helpers;
 using SampleApp.API.Models;
+using SampleApp.API.SignalR;
 
 namespace SampleApp.API
 {
@@ -38,15 +40,19 @@ namespace SampleApp.API
                 opt.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             });
             services.AddCors();
+            services.AddSignalR();
             services.Configure<CloudinarySettings>(Configuration.GetSection("CloudinarySettings"));
             services.AddAutoMapper(typeof(SampleAppService).Assembly);
+
+            services.AddSingleton<PresenceTracker>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ISampleAppService, SampleAppService>();
             services.AddScoped<ILikesService, LikesService>();
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<LogUserActivity>();
 
-            services.AddIdentityCore<User>(opt=>{
+            services.AddIdentityCore<User>(opt =>
+            {
                 opt.Password.RequireNonAlphanumeric = false;
             })
                 .AddRoles<Role>()
@@ -64,7 +70,20 @@ namespace SampleApp.API
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
                         ValidateAudience = false,
                         ValidateIssuer = false
-                        // ValidIssuer = "http://localhost:61768/"
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
                     };
                 });
 
@@ -100,7 +119,10 @@ namespace SampleApp.API
             }
 
             //app.UseHttpsRedirection();
-            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            app.UseCors(x => x.AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials()
+                .WithOrigins("http://localhost:4200"));
 
 
             app.UseRouting();
@@ -112,6 +134,8 @@ namespace SampleApp.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<PresenceHub>("hubs/presence");
+                endpoints.MapHub<MessageHub>("hubs/message");
             });
         }
     }

@@ -18,6 +18,12 @@ export class MemberListComponent implements OnInit {
   genderList = [{value: 'male', display: 'Male'}, {value: 'female', display: 'Female'}]
 
   constructor(private userService: UserService, private alertify: AlertifyService) { 
+    var userId = JSON.parse(localStorage.getItem('user')).id;
+    this.userService.getUser(userId).subscribe(value => {
+      this.user = value;
+      this.userParams = new UserParams(this.user);
+      this.loadUsers();
+    });
               }
 
   ngOnInit() {

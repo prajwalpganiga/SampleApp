@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { environment } from 'src/environments/environment';
 import { User } from '../_models/user';
+import { PresenceService } from './presence.service';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +20,7 @@ export class AuthService {
   currentUserSource = new ReplaySubject<User>(1);
   currentUser$ = this.currentUserSource.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private presenceService: PresenceService) {}
 
   changeMemberPhoto(photoUrl: string) {
     this.photoUrl.next(photoUrl);
@@ -39,6 +40,8 @@ export class AuthService {
           this.currentUser = user.user;
           this.currentUserSource.next(user);
           this.changeMemberPhoto(this.currentUser.photoUrl);
+
+          this.presenceService.createHubConnection(user.token);
         }
       })
     );

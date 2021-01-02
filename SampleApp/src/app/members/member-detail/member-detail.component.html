@@ -5,6 +5,9 @@
       <div class="card">
         <img class="card-img-top img-thumbnail" src="{{user.photoUrl || './assets/user.png'}}" alt="{{user.knownAs}}">
         <div class="card-body">
+          <div style="margin-bottom: 10px;" class="text-success" *ngIf="(presence.onlineUsers$ | async).includes(user.username)">
+            <i class="fa fa-user-circle"></i> Online Now
+          </div>
           <div>
             <strong>Location: </strong>
             <p>{{user.city}}, {{user.country}}</p>
@@ -49,7 +52,7 @@
             <ngx-gallery [options]="galleryOptions" [images]="galleryImages" class="ngx-gallery"></ngx-gallery>
           </tab>
           <tab heading="Messages" (selectTab)="onTabActivated($event)">
-            <app-member-messages [messages]="messages" [username]="user.username"></app-member-messages>
+            <app-member-messages [username]="user.username"></app-member-messages>
           </tab>
         </tabset>
       </div>

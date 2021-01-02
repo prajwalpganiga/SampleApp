@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../_services/auth.service';
 import { AlertifyService } from '../_services/Alertify.service';
 import { Router } from '@angular/router';
+import { PresenceService } from '../_services/presence.service';
 
 @Component({
   selector: 'app-nav',
@@ -12,7 +13,10 @@ export class NavComponent implements OnInit {
   model: any = {};
   photoUrl: string;
 
-  constructor(public authService: AuthService, private alertify: AlertifyService, private router: Router) { }
+  constructor(public authService: AuthService, 
+    private alertify: AlertifyService, 
+    private router: Router,
+    private presenceService: PresenceService) { }
 
   ngOnInit() {
     this.authService.currentPhotoUrl.subscribe(photoUrl => this.photoUrl = photoUrl);
@@ -34,6 +38,7 @@ export class NavComponent implements OnInit {
   }
 
   logout(){
+    this.presenceService.stopHubConnection();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     this.authService.decodedToken = null;

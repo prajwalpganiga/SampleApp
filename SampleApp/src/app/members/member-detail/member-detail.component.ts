@@ -1,19 +1,21 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { UserService } from 'src/app/_services/user.service';
 import { AlertifyService } from 'src/app/_services/Alertify.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { User } from 'src/app/_models/user';
 import { NgxGalleryOptions, NgxGalleryImage, NgxGalleryAnimation } from '@kolkov/ngx-gallery';
 import { TabDirective, TabsetComponent } from 'ngx-bootstrap/tabs';
 import { Message } from 'src/app/_models/message';
 import { MessageService } from 'src/app/_services/message.service';
+import { PresenceService } from 'src/app/_services/presence.service';
+import { AuthService } from 'src/app/_services/auth.service';
 
 @Component({
   selector: 'app-member-detail',
   templateUrl: './member-detail.component.html',
   styleUrls: ['./member-detail.component.css']
 })
-export class MemberDetailComponent implements OnInit {
+export class MemberDetailComponent implements OnInit, OnDestroy {
   user: User;
   galleryOptions: NgxGalleryOptions[];
   galleryImages: NgxGalleryImage[];
@@ -21,8 +23,10 @@ export class MemberDetailComponent implements OnInit {
   activeTab: TabDirective;
   messages: Message[] = [];
 
-  constructor(private userService: UserService, private alertify: AlertifyService,
-              private route: ActivatedRoute, private messageService: MessageService) { }
+  constructor(public presence: PresenceService, private router: Router,
+              private route: ActivatedRoute, private messageService: MessageService) {
+                this.router.routeReuseStrategy.shouldReuseRoute = () => false;
+               }
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -88,18 +92,28 @@ export class MemberDetailComponent implements OnInit {
     if(!this.user){
       this.ngOnInit();
     }
-    this.messageService
-      .getMessageThread(this.user.username)
-      .subscribe((messages) => {
-        this.messages = messages.result;
-      });
+    // this.messageService
+    //   .getMessageThread(this.user.username)
+    //   .subscribe((messages) => {
+    //     this.messages = messages.result;
+    //   });
   }
 
   onTabActivated(data: TabDirective){
     this.activeTab = data;
     if(this.activeTab.heading === 'Messages' && this.messages.length === 0){
-      this.loadMessages();
+      if(!this.user){
+        this.ngOnInit();
+      }
+      this.messageService.createHubConnection(localStorage.getItem('token'), this.user.username);
     }
+    else{
+      this.messageService.stopHubConnection();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.messageService.stopHubConnection();
   }
 
   selectTab(tabId: number){
