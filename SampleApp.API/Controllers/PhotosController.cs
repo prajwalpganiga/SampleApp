@@ -21,13 +21,13 @@ namespace SampleApp.API.Controllers
     [ApiController]
     public class PhotosController : ControllerBase
     {
-        private readonly ISampleAppService _sampleAppService;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IOptions<CloudinarySettings> _cloudinaryConfig;
         private Cloudinary _cloudinary;
-        public PhotosController(ISampleAppService sampleAppService, IMapper mapper, IOptions<CloudinarySettings> cloudinaryConfig)
+        public PhotosController(IUnitOfWork unitOfWork, IMapper mapper, IOptions<CloudinarySettings> cloudinaryConfig)
         {
-            _sampleAppService = sampleAppService;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _cloudinaryConfig = cloudinaryConfig;
 
@@ -44,7 +44,7 @@ namespace SampleApp.API.Controllers
         [HttpGet("{id}", Name ="GetPhoto")]
         public async Task<IActionResult> GetPhoto(int id)
         {
-            var photoFromRepo = await _sampleAppService.GetPhoto(id);
+            var photoFromRepo = await _unitOfWork.userService.GetPhoto(id);
             var photo = _mapper.Map<PhotoForReturnDto>(photoFromRepo);
             return Ok(photo);
         }
@@ -57,7 +57,7 @@ namespace SampleApp.API.Controllers
             {
                 return Unauthorized();
             }
-            var userFromRepo = await _sampleAppService.GetUser(userId);
+            var userFromRepo = await _unitOfWork.userService.GetUser(userId);
 
             var file = photoForCreationDto.File;
             var uploadResult = new ImageUploadResult();
@@ -85,7 +85,7 @@ namespace SampleApp.API.Controllers
 
             userFromRepo.Photos.Add(photo);
             
-            if(await _sampleAppService.SaveAll())
+            if(await _unitOfWork.Complete())
             {
                 var photoToReturn = _mapper.Map<PhotoForReturnDto>(photo);
                 return CreatedAtRoute("GetPhoto", new { userId = userId, id = photo.Id }, photoToReturn);
@@ -100,21 +100,21 @@ namespace SampleApp.API.Controllers
             {
                 return Unauthorized();
             }
-            var user = await _sampleAppService.GetUser(userId);
+            var user = await _unitOfWork.userService.GetUser(userId);
             if(!user.Photos.Any(p => p.Id == id))
             {
                 return Unauthorized();
             }
-            var photoFromRepo = await _sampleAppService.GetPhoto(id);
+            var photoFromRepo = await _unitOfWork.userService.GetPhoto(id);
             if(photoFromRepo.IsMain)
             {
                 return BadRequest("This is already the main photo");
             }
-            Photo currentMainPhoto = await _sampleAppService.GetMainPhotoForUser(userId);
+            Photo currentMainPhoto = await _unitOfWork.userService.GetMainPhotoForUser(userId);
             currentMainPhoto.IsMain = false;
 
             photoFromRepo.IsMain = true;
-            if(await _sampleAppService.SaveAll())
+            if(await _unitOfWork.Complete())
             {
                 return NoContent();
             }
@@ -128,12 +128,12 @@ namespace SampleApp.API.Controllers
             {
                 return Unauthorized();
             }
-            var user = await _sampleAppService.GetUser(userId);
+            var user = await _unitOfWork.userService.GetUser(userId);
             if (!user.Photos.Any(p => p.Id == id))
             {
                 return Unauthorized();
             }
-            var photoFromRepo = await _sampleAppService.GetPhoto(id);
+            var photoFromRepo = await _unitOfWork.userService.GetPhoto(id);
             if (photoFromRepo.IsMain)
             {
                 return BadRequest("Can't delete main photo!");
@@ -144,7 +144,7 @@ namespace SampleApp.API.Controllers
                 var result = _cloudinary.Destroy(deleteParams);
                 if (result.Result == "ok")
                 {
-                    _sampleAppService.Delete(photoFromRepo);
+                    _unitOfWork.userService.Delete(photoFromRepo);
                 }
                 else
                 {
@@ -153,9 +153,9 @@ namespace SampleApp.API.Controllers
             }
             if(photoFromRepo.PublicId == null)
             {
-                _sampleAppService.Delete(photoFromRepo);
+                _unitOfWork.userService.Delete(photoFromRepo);
             }
-            if(await _sampleAppService.SaveAll())
+            if(await _unitOfWork.Complete())
             {
                 return Ok();
             }

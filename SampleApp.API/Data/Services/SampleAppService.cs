@@ -67,11 +67,6 @@ namespace SampleApp.API.Data.Services
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<bool> SaveAll()
-        {
-            return await _context.SaveChangesAsync() > 0;
-        }
-
         public async Task<Photo> GetPhoto(int id)
         {
             var photo = await _context.Photos.FirstOrDefaultAsync(p => p.Id == id);

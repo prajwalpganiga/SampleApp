@@ -15,13 +15,13 @@ namespace SampleApp.API.Helpers
             if (!resultContext.HttpContext.User.Identity.IsAuthenticated) return;
 
             var userId = int.Parse(resultContext.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var repo = resultContext.HttpContext.RequestServices.GetService<ISampleAppService>();
-            var user = await repo.GetUserById(userId);
+            var uow = resultContext.HttpContext.RequestServices.GetService<IUnitOfWork>();
+            var user = await uow.userService.GetUserById(userId);
             if (user != null)
             {
-                user.LastActive = DateTime.Now;
+                user.LastActive = DateTime.UtcNow;
             }
-            await repo.SaveAll();
+            await uow.Complete();
         }
     }
 }

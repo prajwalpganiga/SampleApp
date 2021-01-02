@@ -99,7 +99,6 @@ namespace SampleApp.API.Data.Services
                 {
                     message.DateRead = DateTime.UtcNow;
                 }
-                await _context.SaveChangesAsync();
             }
 
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
@@ -108,11 +107,6 @@ namespace SampleApp.API.Data.Services
         public void RemoveConnection(Connection connection)
         {
             _context.Connections.Remove(connection);
-        }
-
-        public async Task<bool> SaveAllAsync()
-        {
-            return await _context.SaveChangesAsync() > 0;
         }
 
         public async Task<Group> GetGroupForConnection(string connectionId)

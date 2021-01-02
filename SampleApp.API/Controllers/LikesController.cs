@@ -15,26 +15,24 @@ namespace SampleApp.API.Controllers
     [Route("api/[controller]")]
     public class LikesController : ControllerBase
     {
-        private readonly ISampleAppService _userService;
-        private readonly ILikesService _likesService;
-        public LikesController(ISampleAppService userService, ILikesService likesService)
+        private readonly IUnitOfWork _unitOfWork;
+        public LikesController(IUnitOfWork unitOfWork)
         {
-            _userService = userService;
-            _likesService = likesService;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpPost("{username}")]
         public async Task<ActionResult> AddLike(string username)
         {
             var sourceUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var likedUser = await _userService.GetUserByUserName(username);
-            var sourceUser = await _likesService.GetUserWithLikes(sourceUserId);
+            var likedUser = await _unitOfWork.userService.GetUserByUserName(username);
+            var sourceUser = await _unitOfWork.likesService.GetUserWithLikes(sourceUserId);
 
             if (likedUser == null) return NotFound();
 
             if (sourceUser.UserName == username) return BadRequest("You cannot like yourself");
 
-            var userLike = await _likesService.GetUserLike(sourceUserId, likedUser.Id);
+            var userLike = await _unitOfWork.likesService.GetUserLike(sourceUserId, likedUser.Id);
 
             if (userLike != null) return BadRequest("You already like this user");
 
@@ -46,7 +44,7 @@ namespace SampleApp.API.Controllers
 
             sourceUser.LikedUsers.Add(userLike);
 
-            if (await _userService.SaveAll()) return Ok();
+            if (await _unitOfWork.Complete()) return Ok();
 
             return BadRequest("Failed to like user");
         }
@@ -55,7 +53,7 @@ namespace SampleApp.API.Controllers
         public async Task<ActionResult<IEnumerable<LikeDto>>> GetUserLikes([FromQuery] LikesParams likesParams)
         {
             likesParams.UserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var users = await _likesService.GetUserLikes(likesParams);
+            var users = await _unitOfWork.likesService.GetUserLikes(likesParams);
             Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
             return Ok(users);
         }

@@ -46,10 +46,8 @@ namespace SampleApp.API
 
             services.AddSingleton<PresenceTracker>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<ISampleAppService, SampleAppService>();
-            services.AddScoped<ILikesService, LikesService>();
-            services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<LogUserActivity>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             services.AddIdentityCore<User>(opt =>
             {

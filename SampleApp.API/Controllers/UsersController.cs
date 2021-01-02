@@ -18,24 +18,24 @@ namespace SampleApp.API.Controllers
     [ServiceFilter(typeof(LogUserActivity))]
     public class UsersController : ControllerBase
     {
-        private readonly ISampleAppService _sampleAppService;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        public UsersController(ISampleAppService sampleAppService, IMapper mapper)
+        public UsersController(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            _sampleAppService = sampleAppService;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetUsers([FromQuery] UserParams userParams)
         {
-            var user = await _sampleAppService.GetUserByUserName(User.Identity.Name);
+            var user = await _unitOfWork.userService.GetUserByUserName(User.Identity.Name);
             userParams.CurrentUsername = user.UserName;
             if(string.IsNullOrEmpty(userParams.Gender))
             {
                 userParams.Gender = user.Gender == "male" ? "female" : "male";
             }
-            var users = await _sampleAppService.GetUsers(userParams);
+            var users = await _unitOfWork.userService.GetUsers(userParams);
             Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
             var usersToReturn = _mapper.Map<IEnumerable<UserForListDto>>(users);
             return Ok(usersToReturn);
@@ -44,7 +44,7 @@ namespace SampleApp.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUser(int id)
         {
-            var user = await _sampleAppService.GetUser(id);
+            var user = await _unitOfWork.userService.GetUser(id);
             var userToReturn = _mapper.Map<UserForDetailedDto>(user);
             return Ok(userToReturn);
         }
@@ -56,9 +56,9 @@ namespace SampleApp.API.Controllers
             {
                 return Unauthorized();
             }
-            var userFromRepo = await _sampleAppService.GetUser(id);
+            var userFromRepo = await _unitOfWork.userService.GetUser(id);
             _mapper.Map(userForUpdateDto, userFromRepo);
-            if (await _sampleAppService.SaveAll())
+            if (await _unitOfWork.Complete())
             {
                 return NoContent();
             }
