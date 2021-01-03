@@ -16,5 +16,6 @@ namespace SampleApp.API.Data.Interfaces
         Task<User> GetUser(int id);
         Task<Photo> GetPhoto(int id);
         Task<Photo> GetMainPhotoForUser(int userId);
+        Task<string> GetUserGender(string username);
     }
 }
